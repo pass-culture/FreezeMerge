@@ -48,7 +48,7 @@ export class Persistence {
   }
 
   async getHooks() {
-    const checks = await this.ref.collection("checks").get();
+    const checks = await this.ref.collection(HOOKS).get();
 
     return checks.docs.map((doc) => {
       const checkData = doc.data() as HookData;
