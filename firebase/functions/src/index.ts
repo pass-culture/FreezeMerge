@@ -26,7 +26,7 @@ export const freeze = slackWebhook(async (id) => {
   return {
     response_type: "in_channel",
     text: "[FREEZE] Tous les repositories ont été freeze",
-  }
+  };
 });
 
 export const unfreeze = slackWebhook(async (id) => {
@@ -36,10 +36,10 @@ export const unfreeze = slackWebhook(async (id) => {
   return {
     response_type: "in_channel",
     text: "[UNFREEZE] Tous les repositories ont été unfreeze",
-  }
+  };
 });
 
-export const whitelistTicket = slackWebhook(async (id, tag) => {
+export const whitelist_ticket = slackWebhook(async (id, tag) => {
   const persistence = new Persistence(id);
   await persistence.whitelistTicket(tag);
 
