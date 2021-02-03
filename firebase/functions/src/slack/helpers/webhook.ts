@@ -3,7 +3,7 @@ import cors from "cors";
 import * as functions from "firebase-functions";
 import { info } from "firebase-functions/lib/logger";
 
-const SLACK_CHANNEL_ACCEPTED = "freeze_merge";
+const SLACK_CHANNEL_ACCEPTED = "freeze-merge";
 const error_message = {
   response_type: "in_channel",
   text: `[ERREUR] Interdiction d'utiliser FreezeMerge dans ce channel. Il est utilisable uniquement dans le channel ${SLACK_CHANNEL_ACCEPTED}. Si vous n'y avez pas accès et en avez besoin, demandez à un responsable technique.`,
