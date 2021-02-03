@@ -14,6 +14,7 @@ type HookData = {
   owner: string;
   repo: string;
   check_run_id: number;
+  link: string;
 };
 
 export class Persistence {
