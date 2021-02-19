@@ -87,11 +87,16 @@ export class Persistence {
       url: string;
       number: number;
       head: { sha: string };
+      state: string;
     }[];
     saveAndBuildHook: (status: CheckAttributes) => Promise<HookData>;
     hookRef?: FirebaseFirestore.DocumentReference;
   }) {
-    if (!pullRequests.length) {
+    const openPullRequests = pullRequests.filter(
+      ({ state }) => state === "open"
+    );
+
+    if (!openPullRequests.length) {
       const hook = await saveAndBuildHook(checkRunStatus.notSynced());
       logger.info("Deleting check", hook);
       return hookRef && hookRef.delete();
@@ -106,7 +111,7 @@ export class Persistence {
 
       if (!freezed) status = checkRunStatus.success();
 
-      const whitelistedPullRequest = pullRequests.find((pr) =>
+      const whitelistedPullRequest = openPullRequests.find((pr) =>
         whitelistedPullRequestUrls.includes(pr.url)
       );
       if (whitelistedPullRequest)
@@ -114,7 +119,7 @@ export class Persistence {
           whitelistedPullRequest.number
         );
 
-      const whitelistedTag = pullRequests
+      const whitelistedTag = openPullRequests
         .reduce<string[]>((tags, pr) => [...tags, ...extractTags(pr.title)], [])
         .find((tag) => whitelistedTickets.includes(tag));
       if (whitelistedTag)
