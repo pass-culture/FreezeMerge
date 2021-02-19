@@ -29,7 +29,7 @@ export const checkRunStatus = {
     completed_at: new Date().toISOString(),
     output: {
       title: "Outdated",
-      summary: "This commit is not ctracked anymore",
+      summary: "This commit is not tracked anymore",
     },
   }),
 

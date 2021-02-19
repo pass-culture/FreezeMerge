@@ -28,7 +28,7 @@ export const probotApp = (app: Probot) => {
 
         const hook = context.repo({
           check_run_id: checkRun.data.id,
-          link: checkRun.url,
+          link: checkRun.data.url,
         });
         return hook;
       },
@@ -54,7 +54,7 @@ export const probotApp = (app: Probot) => {
 
       const checkData = context.repo({
         check_run_id: checkRun.id,
-        link: checkRun.html_url,
+        link: checkRun.url,
       });
 
       return persistence.synchronizeCheck({
