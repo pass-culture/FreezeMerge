@@ -98,8 +98,13 @@ export class Persistence {
 
     if (!openPullRequests.length) {
       const hook = await saveAndBuildHook(checkRunStatus.notSynced());
-      logger.info("Deleting check", hook);
-      return hookRef && hookRef.delete();
+      if (hookRef) {
+        logger.info("Deleting hook", hook);
+        return hookRef && hookRef.delete();
+      } else {
+        logger.info("No hook to delete", hook);
+        return;
+      }
     } else {
       const {
         freezed,
@@ -130,8 +135,10 @@ export class Persistence {
       const hook = await saveAndBuildHook(status);
 
       if (hookRef) {
+        logger.info("Updating hook", hook);
         return hookRef.update(hook);
       } else {
+        logger.info("Creating hook", hook);
         return this.ref.collection(HOOKS).add(hook);
       }
     }
