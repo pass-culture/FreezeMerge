@@ -37,6 +37,7 @@ export const probotApp = (app: Probot) => {
 
   app.on(
     [
+      "pull_request.closed",
       "pull_request.opened",
       "pull_request.reopened",
       "pull_request.edited",
