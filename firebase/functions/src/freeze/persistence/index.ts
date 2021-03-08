@@ -61,6 +61,16 @@ export class Persistence {
     });
   }
 
+  async getHook(hookId: string) {
+    const doc = await this.ref.collection(HOOKS).doc(hookId).get();
+    const checkData = doc.data() as HookData;
+
+    return {
+      checkData,
+      hookRef: doc.ref,
+    };
+  }
+
   freeze() {
     return this.ref.update({ freezed: true });
   }
