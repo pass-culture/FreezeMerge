@@ -4,9 +4,13 @@ import { probotApp } from "./github/checkRuns";
 import { getOctokitFromPersistence } from "./github/config";
 import { serverlessProbot as probotWebhook } from "./github/helpers/webhook";
 import { Persistence } from "./freeze/persistence";
-import { synchronizeCheckRuns } from "./freeze/synchronize";
+import {
+  synchronizeCheckRuns,
+  synchronizeCheckRun,
+} from "./freeze/synchronize";
 import { slackWebhook } from "./slack/helpers/webhook";
 import { PERSISTENCES } from "./freeze/config";
+import { onHookToSynchronize } from "./freeze/hooksPubSub";
 
 export const github_webhook = probotWebhook(probotApp);
 
@@ -14,10 +18,18 @@ export const onSynchronisationChange = functions.firestore
   .document(`${PERSISTENCES}/{persistenceId}`)
   .onWrite(async (change, context) => {
     const persistence = new Persistence(change.after);
+
+    return synchronizeCheckRuns(persistence);
+  });
+
+export const onSynchronizeHook = onHookToSynchronize(
+  ({ controllerId, hookId }) => {
+    const persistence = new Persistence(controllerId);
     const octokit = getOctokitFromPersistence(persistence);
 
-    return synchronizeCheckRuns(octokit, persistence);
-  });
+    return synchronizeCheckRun(octokit, persistence, hookId);
+  }
+);
 
 export const freeze = slackWebhook(async (id) => {
   const persistence = new Persistence(id);
