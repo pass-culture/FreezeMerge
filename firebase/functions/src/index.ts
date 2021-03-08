@@ -10,8 +10,7 @@ import {
 } from "./freeze/synchronize";
 import { slackWebhook } from "./slack/helpers/webhook";
 import { PERSISTENCES } from "./freeze/config";
-
-const HOOKS_TO_SYNCHRONIZE_TOPIC = "hooks_to_synchronize";
+import { onHookToSynchronize } from "./freeze/hooksPubSub";
 
 export const github_webhook = probotWebhook(probotApp);
 
@@ -19,20 +18,18 @@ export const onSynchronisationChange = functions.firestore
   .document(`${PERSISTENCES}/{persistenceId}`)
   .onWrite(async (change, context) => {
     const persistence = new Persistence(change.after);
-    const octokit = getOctokitFromPersistence(persistence);
 
-    return synchronizeCheckRuns(octokit, persistence);
+    return synchronizeCheckRuns(persistence);
   });
 
-export const synchronizeHook = functions.pubsub
-  .topic(HOOKS_TO_SYNCHRONIZE_TOPIC)
-  .onPublish((message) => {
-    const { controllerId, hookId } = message.json;
+export const onSynchronizeHook = onHookToSynchronize(
+  ({ controllerId, hookId }) => {
     const persistence = new Persistence(controllerId);
     const octokit = getOctokitFromPersistence(persistence);
 
     return synchronizeCheckRun(octokit, persistence, hookId);
-  });
+  }
+);
 
 export const freeze = slackWebhook(async (id) => {
   const persistence = new Persistence(id);
