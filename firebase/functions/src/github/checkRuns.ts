@@ -1,5 +1,5 @@
 import { Probot } from "probot";
-import { getCheckOnRef, getPullRequests } from "./helpers/api";
+import { getCheckForCommit, getPullRequests } from "./helpers/api";
 import { getPersistenceFromProbot } from "./config";
 
 export const probotApp = (app: Probot) => {
@@ -47,7 +47,7 @@ export const probotApp = (app: Probot) => {
       const persistence = await getPersistenceFromProbot(context);
 
       const pullRequest = context.payload.pull_request;
-      const checkRun = await getCheckOnRef(context, pullRequest.head.sha);
+      const checkRun = await getCheckForCommit(context, pullRequest.head.sha);
       if (!checkRun) {
         console.log("No check on this PR for now");
         return;
