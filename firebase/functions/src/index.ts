@@ -1,39 +1,39 @@
 import * as functions from "firebase-functions";
 
 import { probotApp } from "./github/checkRuns";
-import { getOctokitFromPersistence } from "./github/config";
+import { getOctokitFromController } from "./github/config";
 import { serverlessProbot as probotWebhook } from "./github/helpers/webhook";
-import { Persistence } from "./freeze/persistence";
+import { Controller } from "./freeze/persistence";
 import {
   synchronizeCheckRuns,
   synchronizeCheckRun,
 } from "./freeze/synchronize";
 import { slackWebhook } from "./slack/helpers/webhook";
-import { PERSISTENCES } from "./freeze/config";
+import { CONTROLLERS } from "./freeze/config";
 import { onHookToSynchronize } from "./freeze/hooksPubSub";
 
 export const github_webhook = probotWebhook(probotApp);
 
 export const onSynchronisationChange = functions.firestore
-  .document(`${PERSISTENCES}/{persistenceId}`)
+  .document(`${CONTROLLERS}/{controllerId}`)
   .onWrite(async (change, context) => {
-    const persistence = new Persistence(change.after);
+    const controller = new Controller(change.after);
 
-    return synchronizeCheckRuns(persistence);
+    return synchronizeCheckRuns(controller);
   });
 
 export const onSynchronizeHook = onHookToSynchronize(
   ({ controllerId, hookId }) => {
-    const persistence = new Persistence(controllerId);
-    const octokit = getOctokitFromPersistence(persistence);
+    const controller = new Controller(controllerId);
+    const octokit = getOctokitFromController(controller);
 
-    return synchronizeCheckRun(octokit, persistence, hookId);
+    return synchronizeCheckRun(octokit, controller, hookId);
   }
 );
 
 export const freeze = slackWebhook(async (id) => {
-  const persistence = new Persistence(id);
-  await persistence.freeze();
+  const controller = new Controller(id);
+  await controller.freeze();
 
   return {
     response_type: "in_channel",
@@ -42,8 +42,8 @@ export const freeze = slackWebhook(async (id) => {
 });
 
 export const unfreeze = slackWebhook(async (id) => {
-  const persistence = new Persistence(id);
-  await persistence.unfreeze();
+  const controller = new Controller(id);
+  await controller.unfreeze();
 
   return {
     response_type: "in_channel",
@@ -52,8 +52,8 @@ export const unfreeze = slackWebhook(async (id) => {
 });
 
 export const whitelist_ticket = slackWebhook(async (id, tag) => {
-  const persistence = new Persistence(id);
-  await persistence.whitelistTicket(tag);
+  const controller = new Controller(id);
+  await controller.whitelistTicket(tag);
 
   return {
     response_type: "in_channel",

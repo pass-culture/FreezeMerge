@@ -2,16 +2,16 @@ import { Octokit } from "@octokit/rest";
 import { logger } from "firebase-functions";
 import { getPullRequests } from "../github/helpers/api";
 import { askHookToBeSynchronized } from "./hooksPubSub";
-import { Persistence } from "./persistence";
+import { Controller } from "./persistence";
 
-export async function synchronizeCheckRuns(persistence: Persistence) {
-  const hooks = await persistence.getHooks();
+export async function synchronizeCheckRuns(controller: Controller) {
+  const hooks = await controller.getHooks();
   logger.info(`Start synchronization of ${hooks.length} hooks`);
 
   await Promise.all(
     hooks.map(({ hookRef }) =>
       askHookToBeSynchronized({
-        controllerId: persistence.ref.id,
+        controllerId: controller.ref.id,
         hookId: hookRef.id,
       })
     )
@@ -20,11 +20,11 @@ export async function synchronizeCheckRuns(persistence: Persistence) {
 
 export async function synchronizeCheckRun(
   octokit: Octokit,
-  persistence: Persistence,
+  controller: Controller,
   hookId: string
 ) {
   logger.info(`Start synchronization of hookId=${hookId}`);
-  const { checkData, hookRef } = await persistence.getHook(hookId);
+  const { checkData, hookRef } = await controller.getHook(hookId);
 
   const check = await octokit.checks.get(checkData);
   const pullRequests = await getPullRequests(check.data, {
@@ -32,7 +32,7 @@ export async function synchronizeCheckRun(
     checkData,
   });
 
-  await persistence.synchronizeCheck({
+  await controller.synchronizeCheck({
     pullRequests,
 
     hookRef,

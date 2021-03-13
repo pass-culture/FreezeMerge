@@ -1,6 +1,6 @@
 import admin from "firebase-admin";
 
-export const PERSISTENCES = "controllers";
+export const CONTROLLERS = "controllers";
 export const HOOKS = "hooks";
 
 admin.initializeApp();

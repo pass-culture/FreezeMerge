@@ -1,11 +1,11 @@
 import { logger } from "firebase-functions";
 import { DocumentSnapshot } from "firebase-functions/lib/providers/firestore";
-import { db, HOOKS, PERSISTENCES } from "../config";
+import { db, HOOKS, CONTROLLERS } from "../config";
 import { checkRunStatus, CheckAttributes } from "../checkStatus";
 import { extractTags } from "./smartTagExtract";
 import admin from "firebase-admin";
 
-interface PersistenceData {
+interface ControllerData {
   freezed: boolean;
   whitelistedPullRequestUrls: string[];
   whitelistedTickets: string[];
@@ -17,16 +17,16 @@ type HookData = {
   link: string;
 };
 
-export class Persistence {
+export class Controller {
   ref: FirebaseFirestore.DocumentReference;
-  _data?: PersistenceData;
+  _data?: ControllerData;
 
-  constructor(persistence: string | DocumentSnapshot) {
-    if (typeof persistence === "string") {
-      this.ref = db.collection(PERSISTENCES).doc(persistence);
+  constructor(controller: string | DocumentSnapshot) {
+    if (typeof controller === "string") {
+      this.ref = db.collection(CONTROLLERS).doc(controller);
     } else {
-      this.ref = persistence.ref;
-      this._data = this.extractData(persistence);
+      this.ref = controller.ref;
+      this._data = this.extractData(controller);
     }
   }
 

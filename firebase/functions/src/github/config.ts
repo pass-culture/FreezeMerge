@@ -1,5 +1,5 @@
 import * as functions from "firebase-functions";
-import { Persistence } from "../freeze/persistence";
+import { Controller } from "../freeze/persistence";
 import { ProbotOctokit } from "probot";
 import { createAppAuth } from "@octokit/auth-app";
 
@@ -22,16 +22,16 @@ const newOctokit = (installationId: number) =>
     },
   });
 
-export function getOctokitFromPersistence(persistence: Persistence) {
-  const installationId = parseInt(persistence.ref.id);
+export function getOctokitFromController(controller: Controller) {
+  const installationId = parseInt(controller.ref.id);
   return newOctokit(installationId);
 }
 
-export function getPersistenceFromProbot(context: {
+export function getControllerFromProbot(context: {
   payload: { installation?: { id: number } };
 }) {
-  const persistenceId = context.payload.installation?.id;
-  if (!persistenceId) throw new Error("No installation");
+  const controllerId = context.payload.installation?.id;
+  if (!controllerId) throw new Error("No installation");
 
-  return new Persistence(persistenceId.toString());
+  return new Controller(controllerId.toString());
 }

@@ -1,17 +1,17 @@
 import { Probot } from "probot";
 import { getCheckForCommit, getPullRequests } from "./helpers/api";
-import { getPersistenceFromProbot } from "./config";
+import { getControllerFromProbot } from "./config";
 
 export const probotApp = (app: Probot) => {
   app.on(["check_suite.requested"], async function (context) {
     const startTime = new Date();
 
-    const persistence = getPersistenceFromProbot(context);
+    const controller = getControllerFromProbot(context);
 
     const checkSuite = context.payload.check_suite;
     const pullRequests = await getPullRequests(checkSuite, context);
 
-    return persistence.synchronizeCheck({
+    return controller.synchronizeCheck({
       pullRequests,
 
       saveAndBuildHook: async (checkAttributes) => {
@@ -44,7 +44,7 @@ export const probotApp = (app: Probot) => {
       "pull_request.synchronize",
     ],
     async function (context) {
-      const persistence = await getPersistenceFromProbot(context);
+      const controller = await getControllerFromProbot(context);
 
       const pullRequest = context.payload.pull_request;
       const checkRun = await getCheckForCommit(context, pullRequest.head.sha);
@@ -58,7 +58,7 @@ export const probotApp = (app: Probot) => {
         link: checkRun.url,
       });
 
-      return persistence.synchronizeCheck({
+      return controller.synchronizeCheck({
         pullRequests: [pullRequest],
 
         saveAndBuildHook: async (checkAttributes) => {
