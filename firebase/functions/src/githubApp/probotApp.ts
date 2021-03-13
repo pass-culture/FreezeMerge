@@ -67,18 +67,33 @@ export default (app: Probot) => {
         link: checkRun.url,
       });
 
-      return controller.synchronizeCheck({
-        pullRequests: [context.payload.pull_request],
+      if (context.payload.pull_request.state === "open") {
+        return controller.synchronizeCheck({
+          pullRequests: [context.payload.pull_request],
 
-        saveAndBuildHook: async (checkAttributes) => {
-          await context.octokit.checks.update({
-            ...checkData,
-            ...checkAttributes,
-          });
+          saveAndBuildHook: async (checkAttributes) => {
+            await context.octokit.checks.update({
+              ...checkData,
+              ...checkAttributes,
+            });
 
-          return checkData;
-        },
-      });
+            return checkData;
+          },
+        });
+      } else {
+        return controller.synchronizeCheck({
+          pullRequests: [],
+
+          saveAndBuildHook: async (checkAttributes) => {
+            await context.octokit.checks.update({
+              ...checkData,
+              ...checkAttributes,
+            });
+
+            return checkData;
+          },
+        });
+      }
     }
   );
 };

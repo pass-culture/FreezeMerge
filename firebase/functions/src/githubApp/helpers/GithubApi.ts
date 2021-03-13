@@ -19,7 +19,9 @@ export default (octokit: Octokit) => ({
       )
     );
 
-    return results.map(({ data }) => data);
+    return results
+      .map(({ data }) => data)
+      .filter(({ state }) => state === "open");
   },
 
   listCommitsChecks: async function (commit: {

@@ -102,11 +102,7 @@ export class Controller {
     saveAndBuildHook: (status: CheckAttributes) => Promise<HookData>;
     hookRef?: FirebaseFirestore.DocumentReference;
   }) {
-    const openPullRequests = pullRequests.filter(
-      ({ state }) => state === "open"
-    );
-
-    if (!openPullRequests.length) {
+    if (!pullRequests.length) {
       const hook = await saveAndBuildHook(checkRunStatus.notSynced());
       if (hookRef) {
         logger.info("Deleting hook", hook);
@@ -126,7 +122,7 @@ export class Controller {
 
       if (!freezed) status = checkRunStatus.success();
 
-      const whitelistedPullRequest = openPullRequests.find((pr) =>
+      const whitelistedPullRequest = pullRequests.find((pr) =>
         whitelistedPullRequestUrls.includes(pr.url)
       );
       if (whitelistedPullRequest)
@@ -134,7 +130,7 @@ export class Controller {
           whitelistedPullRequest.number
         );
 
-      const whitelistedTag = openPullRequests
+      const whitelistedTag = pullRequests
         .reduce<string[]>((tags, pr) => [...tags, ...extractTags(pr.title)], [])
         .find((tag) => whitelistedTickets.includes(tag));
       if (whitelistedTag)
