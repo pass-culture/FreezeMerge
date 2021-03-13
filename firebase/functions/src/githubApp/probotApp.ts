@@ -2,7 +2,7 @@ import { Probot } from "probot";
 import { getCheckForCommit, getPullRequests } from "./helpers/api";
 import { getControllerFromProbot } from "./config";
 
-export const probotApp = (app: Probot) => {
+export default (app: Probot) => {
   app.on(["check_suite.requested"], async function (context) {
     const startTime = new Date();
 

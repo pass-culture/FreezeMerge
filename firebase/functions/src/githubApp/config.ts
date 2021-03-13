@@ -1,5 +1,5 @@
 import * as functions from "firebase-functions";
-import { Controller } from "../freeze/persistence";
+import { Controller } from "../controllersFirestore/models";
 import { ProbotOctokit } from "probot";
 import { createAppAuth } from "@octokit/auth-app";
 

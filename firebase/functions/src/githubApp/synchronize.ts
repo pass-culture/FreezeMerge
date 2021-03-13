@@ -1,22 +1,7 @@
 import { Octokit } from "@octokit/rest";
+import { getPullRequests } from "./helpers/api";
+import { Controller } from "../controllersFirestore/models";
 import { logger } from "firebase-functions";
-import { getPullRequests } from "../github/helpers/api";
-import { askHookToBeSynchronized } from "./hooksPubSub";
-import { Controller } from "./persistence";
-
-export async function synchronizeCheckRuns(controller: Controller) {
-  const hooks = await controller.getHooks();
-  logger.info(`Start synchronization of ${hooks.length} hooks`);
-
-  await Promise.all(
-    hooks.map(({ hookRef }) =>
-      askHookToBeSynchronized({
-        controllerId: controller.ref.id,
-        hookId: hookRef.id,
-      })
-    )
-  );
-}
 
 export async function synchronizeCheckRun(
   octokit: Octokit,
