@@ -1,15 +1,18 @@
 import { Probot } from "probot";
-import { getCheckForCommit, getPullRequests } from "./helpers/api";
-import { getControllerFromProbot } from "./config";
+import GithubApi from "./helpers/GithubApi";
+import { Controller } from "../controllersFirestore/models";
 
 export default (app: Probot) => {
   app.on(["check_suite.requested"], async function (context) {
-    const startTime = new Date();
+    const githubApi = GithubApi(context.octokit);
+    const controller = await new Controller(
+      context.payload.installation?.id.toString() || ""
+    );
 
-    const controller = getControllerFromProbot(context);
-
-    const checkSuite = context.payload.check_suite;
-    const pullRequests = await getPullRequests(checkSuite, context);
+    const pullRequests = await githubApi.listChecksPullRequests(
+      context.payload.check_suite,
+      context.repo()
+    );
 
     return controller.synchronizeCheck({
       pullRequests,
@@ -18,10 +21,10 @@ export default (app: Probot) => {
         const checkRun = await context.octokit.checks.create(
           context.repo({
             name: "Freeze Merge",
-            head_branch: checkSuite.head_branch,
-            head_sha: checkSuite.head_sha,
+            head_branch: context.payload.check_suite.head_branch,
+            head_sha: context.payload.check_suite.head_sha,
             status: "completed",
-            started_at: startTime.toISOString(),
+            started_at: new Date().toISOString(),
             ...checkAttributes,
           })
         );
@@ -44,10 +47,16 @@ export default (app: Probot) => {
       "pull_request.synchronize",
     ],
     async function (context) {
-      const controller = await getControllerFromProbot(context);
+      const githubApi = GithubApi(context.octokit);
+      const controller = await new Controller(
+        context.payload.installation?.id.toString() || ""
+      );
 
-      const pullRequest = context.payload.pull_request;
-      const checkRun = await getCheckForCommit(context, pullRequest.head.sha);
+      const checkRun = await githubApi.listCommitsChecks(
+        context.repo({
+          ref: context.payload.pull_request.head.sha,
+        })
+      );
       if (!checkRun) {
         console.log("No check on this PR for now");
         return;
@@ -59,7 +68,7 @@ export default (app: Probot) => {
       });
 
       return controller.synchronizeCheck({
-        pullRequests: [pullRequest],
+        pullRequests: [context.payload.pull_request],
 
         saveAndBuildHook: async (checkAttributes) => {
           await context.octokit.checks.update({

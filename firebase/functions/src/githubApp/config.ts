@@ -26,12 +26,3 @@ export function getOctokitFromController(controller: Controller) {
   const installationId = parseInt(controller.ref.id);
   return newOctokit(installationId);
 }
-
-export function getControllerFromProbot(context: {
-  payload: { installation?: { id: number } };
-}) {
-  const controllerId = context.payload.installation?.id;
-  if (!controllerId) throw new Error("No installation");
-
-  return new Controller(controllerId.toString());
-}

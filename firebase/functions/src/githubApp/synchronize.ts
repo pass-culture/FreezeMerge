@@ -1,5 +1,5 @@
 import { Octokit } from "@octokit/rest";
-import { getPullRequests } from "./helpers/api";
+import GithubApi from "./helpers/GithubApi";
 import { Controller } from "../controllersFirestore/models";
 import { logger } from "firebase-functions";
 
@@ -9,13 +9,14 @@ export async function synchronizeCheckRun(
   hookId: string
 ) {
   logger.info(`Start synchronization of hookId=${hookId}`);
+  const githubApi = GithubApi(octokit);
   const { checkData, hookRef } = await controller.getHook(hookId);
 
   const check = await octokit.checks.get(checkData);
-  const pullRequests = await getPullRequests(check.data, {
-    octokit,
-    checkData,
-  });
+  const pullRequests = await githubApi.listChecksPullRequests(
+    check.data,
+    checkData
+  );
 
   await controller.synchronizeCheck({
     pullRequests,
