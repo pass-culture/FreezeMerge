@@ -33,11 +33,13 @@ export async function getPullRequests(
   return results.map(({ data }) => data);
 }
 
-export async function getCheckOnRef(context: Context, ref: string) {
+export async function getCheckForCommit(context: Context, ref: string) {
   const checkRunsRequest = await context.octokit.checks.listForRef(
     context.repo({ ref })
   );
-  const checkRuns = checkRunsRequest.data.check_runs;
+  const checkRuns = checkRunsRequest.data.check_runs.filter(
+    ({ app }) => app.owner.login === context.repo().owner
+  );
 
   if (checkRuns.length === 0) {
     return;
