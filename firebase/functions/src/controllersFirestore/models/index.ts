@@ -1,6 +1,6 @@
 import { logger } from "firebase-functions";
 import { DocumentSnapshot } from "firebase-functions/lib/providers/firestore";
-import { db, HOOKS, CONTROLLERS } from "../config";
+import { db, HOOKS, CONTROLLERS, PULL_REQUESTS } from "../config";
 import { checkRunStatus, CheckAttributes } from "../../githubApp/checkStatus";
 import { extractTags } from "./smartTagExtract";
 import admin from "firebase-admin";
@@ -15,6 +15,10 @@ type HookData = {
   repo: string;
   check_run_id: number;
   link: string;
+};
+type PullRequestData = {
+  // checkId: number;
+  sha: string;
 };
 
 export class Controller {
@@ -69,6 +73,21 @@ export class Controller {
       checkData,
       hookRef: doc.ref,
     };
+  }
+
+  async getRecord(id: string) {
+    const doc = await this.ref.collection(PULL_REQUESTS).doc(id).get();
+    const data = doc.data();
+
+    if (!data) return null;
+
+    return {
+      data: data as PullRequestData,
+      ref: doc.ref,
+    };
+  }
+  async setRecord(id: string, record: PullRequestData) {
+    return this.ref.collection(PULL_REQUESTS).doc(id).set(record);
   }
 
   freeze() {

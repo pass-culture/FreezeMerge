@@ -1,6 +1,8 @@
 import { Probot } from "probot";
 import GithubApi from "./helpers/GithubApi";
 import { Controller } from "../controllersFirestore/models";
+import { CHECKS_NAME } from "./config";
+import synchronizePullRequest from "./synchronizePullRequest";
 
 export default (app: Probot) => {
   app.on(["check_suite.requested"], async function (context) {
@@ -14,13 +16,13 @@ export default (app: Probot) => {
       context.repo()
     );
 
-    return controller.synchronizeCheck({
+    await controller.synchronizeCheck({
       pullRequests,
 
       saveAndBuildHook: async (checkAttributes) => {
         const checkRun = await context.octokit.checks.create(
           context.repo({
-            name: "Freeze Merge",
+            name: CHECKS_NAME,
             head_branch: context.payload.check_suite.head_branch,
             head_sha: context.payload.check_suite.head_sha,
             status: "completed",
@@ -36,6 +38,12 @@ export default (app: Probot) => {
         return hook;
       },
     });
+
+    return synchronizePullRequest(
+      context.pullRequest(),
+      context.octokit,
+      controller
+    );
   });
 
   app.on(
@@ -68,7 +76,7 @@ export default (app: Probot) => {
       });
 
       if (context.payload.pull_request.state === "open") {
-        return controller.synchronizeCheck({
+        await controller.synchronizeCheck({
           pullRequests: [context.payload.pull_request],
 
           saveAndBuildHook: async (checkAttributes) => {
@@ -81,7 +89,7 @@ export default (app: Probot) => {
           },
         });
       } else {
-        return controller.synchronizeCheck({
+        await controller.synchronizeCheck({
           pullRequests: [],
 
           saveAndBuildHook: async (checkAttributes) => {
@@ -94,6 +102,12 @@ export default (app: Probot) => {
           },
         });
       }
+
+      return synchronizePullRequest(
+        context.pullRequest(),
+        context.octokit,
+        controller
+      );
     }
   );
 };

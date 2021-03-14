@@ -5,6 +5,8 @@ import { createAppAuth } from "@octokit/auth-app";
 
 const config = functions.config();
 
+export const CHECKS_NAME = "Freeze Merge";
+
 export const probotOptions = {
   appId: config.github.app_id,
   secret: config.github.webhook_secret,
