@@ -39,11 +39,10 @@ export default (app: Probot) => {
       },
     });
 
-    return synchronizePullRequest(
-      context.pullRequest(),
-      context.octokit,
-      controller
-    );
+    const pullRequest = context.pullRequest();
+    if (!pullRequest.pull_number) return;
+
+    return synchronizePullRequest(pullRequest, context.octokit, controller);
   });
 
   app.on(
