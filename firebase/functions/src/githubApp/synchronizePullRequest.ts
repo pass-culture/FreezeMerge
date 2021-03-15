@@ -9,7 +9,7 @@ type PullRequest = {
 };
 
 const buildId = ({ pull_number, owner, repo }: PullRequest) =>
-  `/${owner}/${repo}/pulls/${pull_number}`;
+  `${pull_number}#${repo}#${owner}`;
 
 export default async function (
   pr: PullRequest,
