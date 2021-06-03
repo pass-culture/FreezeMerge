@@ -1,11 +1,11 @@
 import { logger } from "firebase-functions";
 import { DocumentSnapshot } from "firebase-functions/lib/providers/firestore";
-import { db, HOOKS, PERSISTENCES } from "../config";
-import { checkRunStatus, CheckAttributes } from "../checkStatus";
+import { db, HOOKS, CONTROLLERS, PULL_REQUESTS } from "../config";
+import { checkRunStatus, CheckAttributes } from "../../githubApp/checkStatus";
 import { extractTags } from "./smartTagExtract";
 import admin from "firebase-admin";
 
-interface PersistenceData {
+interface ControllerData {
   freezed: boolean;
   whitelistedPullRequestUrls: string[];
   whitelistedTickets: string[];
@@ -16,17 +16,21 @@ type HookData = {
   check_run_id: number;
   link: string;
 };
+type PullRequestData = {
+  // checkId: number;
+  sha: string;
+};
 
-export class Persistence {
+export class Controller {
   ref: FirebaseFirestore.DocumentReference;
-  _data?: PersistenceData;
+  _data?: ControllerData;
 
-  constructor(persistence: string | DocumentSnapshot) {
-    if (typeof persistence === "string") {
-      this.ref = db.collection(PERSISTENCES).doc(persistence);
+  constructor(controller: string | DocumentSnapshot) {
+    if (typeof controller === "string") {
+      this.ref = db.collection(CONTROLLERS).doc(controller);
     } else {
-      this.ref = persistence.ref;
-      this._data = this.extractData(persistence);
+      this.ref = controller.ref;
+      this._data = this.extractData(controller);
     }
   }
 
@@ -71,6 +75,21 @@ export class Persistence {
     };
   }
 
+  async getRecord(id: string) {
+    const doc = await this.ref.collection(PULL_REQUESTS).doc(id).get();
+    const data = doc.data();
+
+    if (!data) return null;
+
+    return {
+      data: data as PullRequestData,
+      ref: doc.ref,
+    };
+  }
+  async setRecord(id: string, record: PullRequestData) {
+    return this.ref.collection(PULL_REQUESTS).doc(id).set(record);
+  }
+
   freeze() {
     return this.ref.update({ freezed: true });
   }
@@ -102,11 +121,7 @@ export class Persistence {
     saveAndBuildHook: (status: CheckAttributes) => Promise<HookData>;
     hookRef?: FirebaseFirestore.DocumentReference;
   }) {
-    const openPullRequests = pullRequests.filter(
-      ({ state }) => state === "open"
-    );
-
-    if (!openPullRequests.length) {
+    if (!pullRequests.length) {
       const hook = await saveAndBuildHook(checkRunStatus.notSynced());
       if (hookRef) {
         logger.info("Deleting hook", hook);
@@ -126,7 +141,7 @@ export class Persistence {
 
       if (!freezed) status = checkRunStatus.success();
 
-      const whitelistedPullRequest = openPullRequests.find((pr) =>
+      const whitelistedPullRequest = pullRequests.find((pr) =>
         whitelistedPullRequestUrls.includes(pr.url)
       );
       if (whitelistedPullRequest)
@@ -134,7 +149,7 @@ export class Persistence {
           whitelistedPullRequest.number
         );
 
-      const whitelistedTag = openPullRequests
+      const whitelistedTag = pullRequests
         .reduce<string[]>((tags, pr) => [...tags, ...extractTags(pr.title)], [])
         .find((tag) => whitelistedTickets.includes(tag));
       if (whitelistedTag)
